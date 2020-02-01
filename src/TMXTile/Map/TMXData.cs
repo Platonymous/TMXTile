@@ -64,13 +64,7 @@ namespace TMXTile
                 else
                     return null;
             }
-            set
-            {
-                Tiles = new List<TMXTile>();
-
-                foreach (TMXTile tile in value)
-                    Tiles.Add(tile);
-            }
+            set => Tiles = value;
         }
 
         [XmlIgnore]

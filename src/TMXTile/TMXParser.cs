@@ -18,6 +18,7 @@ namespace TMXTile
         internal static DataEncodingType CurrentEncoding {get;set;} = DataEncodingType.XML;
         public TMXMap Parse(Stream stream)
         {
+            CurrentEncoding = DataEncodingType.XML;
             if (Serializer.Deserialize(stream) is TMXMap map)
                 return map;
 
@@ -26,6 +27,7 @@ namespace TMXTile
 
         public TMXMap Parse(XmlReader reader)
         {
+            CurrentEncoding = DataEncodingType.XML;
             if (Serializer.Deserialize(reader) is TMXMap map)
                 return map;
 
@@ -34,6 +36,7 @@ namespace TMXTile
 
         public TMXMap Parse(string path)
         {
+            CurrentEncoding = DataEncodingType.XML;
             using (Stream stream = new FileStream(path, FileMode.Open))
                 return Parse(stream);
         }
