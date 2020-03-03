@@ -15,6 +15,10 @@ namespace TMXTile
 {
     public class TMXFormat : IMapFormat
     {
+        const UInt32 FLIPPED_HORIZONTALLY_FLAG = 0x80000000;
+        const UInt32 FLIPPED_VERTICALLY_FLAG = 0x40000000;
+        const UInt32 FLIPPED_DIAGONALLY_FLAG = 0x20000000;
+
         public string Name => "Tiled XML Format";
 
         public string FileExtensionDescriptor => "Tiled XML Map Files (*.tmx) **";
@@ -183,7 +187,7 @@ namespace TMXTile
                         Location origin = new Location(c.X, c.Y);
                         foreach (TMXTile t in c.Tiles)
                         {
-                            mapLayer.Tiles[origin] = LoadTile(mapLayer, tmxMap, (int)t.Gid);
+                            mapLayer.Tiles[origin] = LoadTile(mapLayer, tmxMap, t.Gid);
                             ++origin.X;
                             if (origin.X >= mapLayer.LayerWidth)
                             {
@@ -197,7 +201,7 @@ namespace TMXTile
                     Location origin = Location.Origin;
                     foreach (TMXTile t in layer.Data.Tiles)
                     {
-                        mapLayer.Tiles[origin] = LoadTile(mapLayer, tmxMap, (int)t.Gid);
+                        mapLayer.Tiles[origin] = LoadTile(mapLayer, tmxMap, t.Gid);
                         ++origin.X;
                         if (origin.X >= mapLayer.LayerWidth)
                         {
@@ -270,33 +274,72 @@ namespace TMXTile
 
 
 
-        internal Tile LoadTile(Layer layer, TMXMap tmxMap, int gid)
+        internal Tile LoadTile(Layer layer, TMXMap tmxMap, UInt32 gid)
         {
             if (gid == 0)
                 return null;
             TileSheet selectedTileSheet = null;
+
             int tileIndex = -1;
+            uint g = gid;
+            bool flipped_horizontally = false;
+            bool flipped_vertically = false;
+            bool flipped_diagonally = false;
+
+            if (g >= FLIPPED_HORIZONTALLY_FLAG)
+            {
+                flipped_horizontally = true;
+                g -= FLIPPED_HORIZONTALLY_FLAG;
+            }
+
+            if(g >= FLIPPED_VERTICALLY_FLAG)
+            {
+                flipped_vertically = true;
+                g -= FLIPPED_VERTICALLY_FLAG;
+            }
+
+            if(g >= FLIPPED_DIAGONALLY_FLAG)
+                flipped_diagonally = true;
+           
+            gid &= ~(FLIPPED_HORIZONTALLY_FLAG |
+                        FLIPPED_VERTICALLY_FLAG |
+                        FLIPPED_DIAGONALLY_FLAG);
+
             foreach (TileSheet tileSheet in layer.Map.TileSheets)
             {
-                int property1 = tileSheet.Properties["@FirstGid"];
-                int property2 = tileSheet.Properties["@LastGid"];
+                UInt32 property1 = (UInt32)tileSheet.Properties["@FirstGid"];
+                UInt32 property2 = (UInt32)tileSheet.Properties["@LastGid"];
                 if (gid >= property1 && gid <= property2)
                 {
                     selectedTileSheet = tileSheet;
-                    tileIndex = gid - property1;
+                    tileIndex = (int)(gid - property1);
                     break;
                 }
             }
             if (selectedTileSheet == null)
                 throw new Exception(string.Format("Invalid tile gid: {0}", gid));
 
+            Tile result = null;
+
             if (tmxMap.Tilesets.Where(ts => ts.Name == selectedTileSheet.Id).FirstOrDefault() is TMXTileset tileset && tileset.Tiles.Where(t => t.Id == tileIndex).FirstOrDefault() is TMXTileSetTile tile && tile.Animations != null && tile.Animations.Count() > 0)
             {
                 StaticTile[] array = tile.Animations.Select(frame => new StaticTile(layer, selectedTileSheet, BlendMode.Alpha, (int)frame.TileId)).ToArray();
-                return new AnimatedTile(layer, array, tile.Animations[0].Duration);
+                result = new AnimatedTile(layer, array, tile.Animations[0].Duration);
             }
             else
-                return new StaticTile(layer, selectedTileSheet, BlendMode.Alpha, tileIndex);
+                result = new StaticTile(layer, selectedTileSheet, BlendMode.Alpha, tileIndex);
+
+            if (flipped_horizontally)
+                result.Properties["FLIPPED_HORIZONTALLY"] = flipped_horizontally;
+
+            if (flipped_vertically)
+                result.Properties["FLIPPED_VERTICALLY"] = flipped_vertically;
+
+            if (flipped_diagonally)
+                result.Properties["FLIPPED_DIAGONALLY"] = flipped_diagonally;
+
+
+            return result;
         }
 
 
