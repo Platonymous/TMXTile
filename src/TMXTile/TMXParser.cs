@@ -16,9 +16,16 @@ namespace TMXTile
     {
         private XmlSerializer Serializer { get; } = new XmlSerializer(typeof(TMXMap));
         internal static DataEncodingType CurrentEncoding {get;set;} = DataEncodingType.XML;
-        public TMXMap Parse(Stream stream)
+        internal static string CurrentDirectory { get; set; } = "";
+        public TMXMap Parse(Stream stream, string path = "")
         {
             CurrentEncoding = DataEncodingType.XML;
+
+            if (path == "" && stream is FileStream fs)
+                path = fs.Name;
+
+            CurrentDirectory = Path.GetDirectoryName(path);
+
             if (Serializer.Deserialize(stream) is TMXMap map)
                 return map;
 
@@ -38,7 +45,7 @@ namespace TMXTile
         {
             CurrentEncoding = DataEncodingType.XML;
             using (Stream stream = new FileStream(path, FileMode.Open))
-                return Parse(stream);
+                return Parse(stream, path);
         }
 
         public void Export(TMXMap map, Stream stream, DataEncodingType dataEncodingType = DataEncodingType.XML)

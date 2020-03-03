@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.IO;
 using System.Xml.Serialization;
 
 namespace TMXTile
@@ -6,6 +7,9 @@ namespace TMXTile
     [XmlRoot(ElementName = "tileset")]
     public class TMXTileset
     {
+        [XmlIgnore]
+        private XmlSerializer Serializer { get; } = new XmlSerializer(typeof(TMXTileset));
+
         [XmlElement(ElementName = "image")]
         public TMXImage Image { get; set; }
         [XmlAttribute(AttributeName = "firstgid")]
@@ -24,5 +28,29 @@ namespace TMXTile
         public TMXGrid Grid { get; set; }
         [XmlElement(ElementName = "tile")]
         public List<TMXTileSetTile> Tiles { get; set; }
+        [XmlAttribute(AttributeName = "source")]
+        public string Source
+        {
+            get
+            {
+                return null;
+            }
+            set
+            {
+                using (Stream stream = new FileStream(Path.Combine(TMXParser.CurrentDirectory, value), FileMode.Open))
+                    if (Serializer.Deserialize(stream) is TMXTileset ts)
+                    {
+                        Image = ts.Image;
+                        Name = ts.Name;
+                        Tilewidth = ts.Tilewidth;
+                        Tileheight = ts.Tileheight;
+                        Tilecount = ts.Tilecount;
+                        Columns = ts.Columns;
+                        Grid = ts.Grid;
+                        Tiles = ts.Tiles;
+                    }
+
+            }
+        }
     }
 }

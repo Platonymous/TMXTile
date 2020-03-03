@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.28803.156
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TMXTile", "TMXTile\TMXTile.csproj", "{F7D9ED20-2959-476E-A089-3AB79FD3BE42}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TMXTile", "TMXTile\TMXTile.csproj", "{F7D9ED20-2959-476E-A089-3AB79FD3BE42}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
