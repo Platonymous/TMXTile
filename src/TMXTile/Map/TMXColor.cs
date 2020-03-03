@@ -12,7 +12,7 @@ namespace TMXTile
 
         public static TMXColor FromString(string value)
         {
-            if (value == null)
+            if (value == null || value.Length < 7)
                 return null;
 
             byte r = (byte)(Convert.ToUInt32(value.Substring(1, 2), 16));

@@ -400,6 +400,9 @@ namespace TMXTile
             if (map.Description.Length > 0)
                 map.Properties["@Description"] = map.Description;
 
+            if (tiledMap1.Backgroundcolor is TMXColor bg)
+                map.Properties["BackgroundColor"] = bg.ToString();
+
             foreach (var prop in map.Properties)
                 properties.Add(new TMXProperty() { Name = prop.Key, StringValue = prop.Value.ToString(), Type = GetPropertyType(prop.Value) });
 
