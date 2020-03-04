@@ -30,7 +30,7 @@ namespace TMXTile
                 byte g = (byte)(Convert.ToUInt32(value.Substring(5, 2), 16));
                 byte b = (byte)(Convert.ToUInt32(value.Substring(7, 2), 16));
 
-                return new TMXColor() { R = r, G = g, B = b };
+                return new TMXColor() { R = r, G = g, B = b, A = a };
             }
 
             return null;
