@@ -70,7 +70,7 @@ namespace TMXTile
 
         public static float GetOpacity(this Layer layer)
         {
-            if(layer.Properties.ContainsKey("@OffsetY"))
+            if(layer.Properties.ContainsKey("@Opacity"))
                 return layer.Properties["@Opacity"];
 
             return 1f;
