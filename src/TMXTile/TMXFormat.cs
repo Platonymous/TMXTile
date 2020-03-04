@@ -226,9 +226,9 @@ namespace TMXTile
                     }
                 }
 
-                mapLayer.Properties.Add("offsetx", (int)Math.Floor(layer.Offsetx * TileSizeMultiplier.Width));
-                mapLayer.Properties.Add("offsety", (int)Math.Floor(layer.Offsety * TileSizeMultiplier.Height));
-                mapLayer.Properties.Add("opacity", layer.Opacity);
+                mapLayer.Properties.Add("@OffsetX", (int)Math.Floor(layer.Offsetx * TileSizeMultiplier.Width));
+                mapLayer.Properties.Add("@OffsetY", (int)Math.Floor(layer.Offsety * TileSizeMultiplier.Height));
+                mapLayer.Properties.Add("@Opacity", layer.Opacity);
                 map.AddLayer(mapLayer);
             }
         }
@@ -252,10 +252,10 @@ namespace TMXTile
                         else
                             imageLayer.Properties[prop.Name] = GetPropertyValue(prop);
 
-                imageLayer.Properties.Add("offsetx", (int)Math.Floor(layer.Offsetx * TileSizeMultiplier.Width));
-                imageLayer.Properties.Add("offsety", (int)Math.Floor(layer.Offsety * TileSizeMultiplier.Height));
-                imageLayer.Properties.Add("opacity", layer.Opacity);
-                imageLayer.Properties["isImageLayer"] = true;
+                imageLayer.Properties.Add("@OffsetX", (int)Math.Floor(layer.Offsetx * TileSizeMultiplier.Width));
+                imageLayer.Properties.Add("@OffsetY", (int)Math.Floor(layer.Offsety * TileSizeMultiplier.Height));
+                imageLayer.Properties.Add("@Opacity", layer.Opacity);
+                imageLayer.Properties["@ImageLayer"] = true;
                 imageLayer.AfterDraw += ImageLayer_AfterDraw;
 
                 map.AddLayer(imageLayer);
@@ -427,7 +427,7 @@ namespace TMXTile
                 map.Properties["@Description"] = map.Description;
 
             if (tiledMap1.Backgroundcolor is TMXColor bg)
-                map.Properties["BackgroundColor"] = bg.ToString();
+                map.Properties["@BackgroundColor"] = bg.ToString();
 
             foreach (var prop in map.Properties)
                 properties.Add(new TMXProperty() { Name = prop.Key, StringValue = prop.Value.ToString(), Type = GetPropertyType(prop.Value) });
@@ -507,18 +507,18 @@ namespace TMXTile
         {
             foreach (Layer layer in map.Layers)
             {
-                if (layer.Properties.Keys.Contains("isImageLayer") && layer.Properties["isImageLayer"] == true)
+                if (layer.Properties.Keys.Contains("@ImageLayer") && layer.Properties["@ImageLayer"] == true)
                 {
                     TMXImageLayer imageLayer = new TMXImageLayer();
                     imageLayer.Name = layer.Id;
                     var imageProps = new List<TMXProperty>();
                     foreach (var prop in layer.Properties)
                     {
-                        if (prop.Key == "offsetx")
+                        if (prop.Key == "@OffsetX")
                             imageLayer.Offsetx = prop.Value;
-                        else if (prop.Key == "offsety")
+                        else if (prop.Key == "@OffsetY")
                             imageLayer.Offsety = prop.Value;
-                        else if (prop.Key == "opacity")
+                        else if (prop.Key == "@Opacity")
                             imageLayer.Opacity = prop.Value;
                         else
                             imageProps.Add(new TMXProperty() { Name = prop.Key, StringValue = prop.Value.ToString(), Type = GetPropertyType(prop.Value) });
@@ -548,11 +548,11 @@ namespace TMXTile
                 };
             var props = new List<TMXProperty>();
                 foreach (var prop in layer.Properties) {
-                    if (prop.Key == "offsetx")
+                    if (prop.Key == "@OffsetX")
                         tiledLayer1.Offsetx = prop.Value;
-                    else if (prop.Key == "offsety")
+                    else if (prop.Key == "@OffsetY")
                         tiledLayer1.Offsety = prop.Value;
-                    else if (prop.Key == "opacity")
+                    else if (prop.Key == "@Opacity")
                         tiledLayer1.Opacity = prop.Value;
                     else
                         props.Add(new TMXProperty() { Name = prop.Key, StringValue = prop.Value.ToString(), Type = GetPropertyType(prop.Value) });
