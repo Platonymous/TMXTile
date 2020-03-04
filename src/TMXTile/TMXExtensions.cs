@@ -62,9 +62,20 @@ namespace TMXTile
                 );
         }
 
+        public static void SetOffset(this Layer layer, Location offset)
+        {
+            layer.Properties["offsetx"] = offset.X;
+            layer.Properties["offsety"] = offset.Y;
+        }
+
         public static float GetOpacity(this Layer layer)
         {
             return layer.Properties.ContainsKey("offsety") ? (float) layer.Properties["opacity"] : 1f;
+        }
+
+        public static void SetOpacity(this Layer layer, float opacity)
+        {
+            layer.Properties["opacity"] = opacity;
         }
 
         public static TMXColor GetColor(this Layer layer)
@@ -73,7 +84,7 @@ namespace TMXTile
                 return TMXColor.FromString(layer.Properties["Color"]);
 
             return null;
-        }
+        }       
 
         public static TMXColor GetColor(this Tile tile)
         {
@@ -91,10 +102,32 @@ namespace TMXTile
             return null;
         }
 
+        public static void SetColor(this Layer layer, TMXColor color)
+        {
+            layer.Properties["Color"] = color.ToString();
+        }
+
+        public static void SetColor(this Tile tile, TMXColor color)
+        {
+            tile.Properties["Color"] = color.ToString();
+        }
+
+        public static void SetColor(this Map map, TMXColor color)
+        {
+            map.Properties["Color"] = color.ToString();
+        }
+
         public static TMXColor GetBackgroundColor(this Map map)
         {
             if (map.Properties.ContainsKey("BackgroundColor"))
                 return TMXColor.FromString(map.Properties["BackgroundColor"]);
+
+            return null;
+        }
+
+        public static TMXColor SetBackgroundColor(this Map map, TMXColor color)
+        {
+            map.Properties["BackgroundColor"] = color.ToString();
 
             return null;
         }
@@ -136,7 +169,7 @@ namespace TMXTile
 
             return effects;
         }
-
+        
         private static float GetRotationForFlippedTile(bool horizontal, bool vertical, bool diagonal)
         {
             if (!horizontal && !vertical && !diagonal)
