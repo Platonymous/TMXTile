@@ -31,12 +31,25 @@ namespace TMXTile
             return layer.Properties.ContainsKey("@ImageLayer") && layer.Properties["@ImageLayer"] == true;
         }
 
+        public static void MakeImageLayer(this Layer layer)
+        {
+            layer.Properties["@ImageLayer"] = true;
+        }
+
         public static TileSheet GetTileSheetForImageLayer(this Layer layer)
         {
             if (!layer.IsImageLayer())
                 return null;
 
-            return layer.Map.TileSheets.FirstOrDefault(ts => ts.Id == "zImageSheet_" + layer.Id);
+            if (layer.Properties.ContainsKey("@ImageLayerTileSheet") && layer.Map.TileSheets.FirstOrDefault(t => t.Id == (string) layer.Properties["@ImageLayerTileSheet"]) is TileSheet ts)
+                return ts;
+
+            return null;
+        }
+
+        public static void SetTileSheetForImageLayer(this Layer layer, TileSheet tileSheet)
+        {
+            layer.Properties["@ImageLayerTileSheet"] = tileSheet.Id;
         }
 
         public static bool IsFlipped(this Tile tile, TileFlip direction)

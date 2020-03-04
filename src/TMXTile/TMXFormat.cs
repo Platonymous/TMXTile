@@ -226,9 +226,8 @@ namespace TMXTile
                     }
                 }
 
-                mapLayer.Properties.Add("@OffsetX", (int)Math.Floor(layer.Offsetx * TileSizeMultiplier.Width));
-                mapLayer.Properties.Add("@OffsetY", (int)Math.Floor(layer.Offsety * TileSizeMultiplier.Height));
-                mapLayer.Properties.Add("@Opacity", layer.Opacity);
+                mapLayer.SetOffset(new Location((int)Math.Floor(layer.Offsetx * TileSizeMultiplier.Width), (int)Math.Floor(layer.Offsety * TileSizeMultiplier.Height)));
+                mapLayer.SetOpacity(layer.Opacity);
                 map.AddLayer(mapLayer);
             }
         }
@@ -252,10 +251,10 @@ namespace TMXTile
                         else
                             imageLayer.Properties[prop.Name] = GetPropertyValue(prop);
 
-                imageLayer.Properties.Add("@OffsetX", (int)Math.Floor(layer.Offsetx * TileSizeMultiplier.Width));
-                imageLayer.Properties.Add("@OffsetY", (int)Math.Floor(layer.Offsety * TileSizeMultiplier.Height));
-                imageLayer.Properties.Add("@Opacity", layer.Opacity);
-                imageLayer.Properties["@ImageLayer"] = true;
+                imageLayer.SetOffset(new Location((int)Math.Floor(layer.Offsetx * TileSizeMultiplier.Width), (int)Math.Floor(layer.Offsety * TileSizeMultiplier.Height)));
+                imageLayer.SetOpacity(layer.Opacity);
+                imageLayer.MakeImageLayer();
+                imageLayer.SetTileSheetForImageLayer(imagesheet);
                 imageLayer.AfterDraw += ImageLayer_AfterDraw;
 
                 map.AddLayer(imageLayer);
@@ -507,7 +506,7 @@ namespace TMXTile
         {
             foreach (Layer layer in map.Layers)
             {
-                if (layer.Properties.Keys.Contains("@ImageLayer") && layer.Properties["@ImageLayer"] == true)
+                if (layer.IsImageLayer())
                 {
                     TMXImageLayer imageLayer = new TMXImageLayer();
                     imageLayer.Name = layer.Id;
@@ -524,7 +523,7 @@ namespace TMXTile
                             imageProps.Add(new TMXProperty() { Name = prop.Key, StringValue = prop.Value.ToString(), Type = GetPropertyType(prop.Value) });
                     }
                     imageLayer.Image = new TMXImage();
-                    var imageTs = map.TileSheets.FirstOrDefault(ts => ts.Id == "zImageSheet_" + layer.Id);
+                    var imageTs = layer.GetTileSheetForImageLayer();
                     if (imageTs == null)
                         continue;
 
