@@ -6,6 +6,7 @@ using System.Security.AccessControl;
 using System.Xml;
 using xTile;
 using xTile.Dimensions;
+using xTile.Display;
 using xTile.Format;
 using xTile.Layers;
 using xTile.ObjectModel;
@@ -30,17 +31,31 @@ namespace TMXTile
 
         public Size TileSizeMultiplier { get; set; } = new Size(1, 1);
 
+        public Action<Layer, Rectangle> DrawImageLayer { get; set; }
+
         public TMXFormat(int tileWidth, int tileHeight)
             : this(new Size(tileWidth, tileHeight))
         {
 
         }
 
+        public TMXFormat(int tileWidth, int tileHeight, Action<Layer, Rectangle> drawImageLayer)
+            : this(tileWidth,tileHeight)
+        {
+            DrawImageLayer = drawImageLayer;
+        }
 
-        public TMXFormat(int tileWidth, int tileHeight, int tileSizeMultiplierX = 1, int tileSizeMultiplierY = 1)
+
+        public TMXFormat(int tileWidth, int tileHeight, int tileSizeMultiplierX, int tileSizeMultiplierY)
             : this(new Size(tileWidth, tileHeight), new Size(tileSizeMultiplierX, tileSizeMultiplierY))
         {
 
+        }
+
+        public TMXFormat(int tileWidth, int tileHeight, int tileSizeMultiplierX, int tileSizeMultiplierY, Action<Layer, Rectangle> drawImageLayer)
+            : this(tileWidth,tileHeight, tileSizeMultiplierX, tileSizeMultiplierY)
+        {
+            DrawImageLayer = drawImageLayer;
         }
 
         public TMXFormat(Size fixedTilesize)
@@ -226,7 +241,7 @@ namespace TMXTile
             foreach (TMXImageLayer layer in tmxMap.ImageLayers)
             {
                 Size imageSize = new Size(layer.Image.Width, layer.Image.Height);
-                TileSheet imagesheet = new TileSheet("zImageSheet_" + layer.Name, map, layer.Image.Source, new Size(1, 1), imageSize);
+                TileSheet imagesheet = new TileSheet("zImageSheet_" + layer.Name, map, layer.Image.Source, new Size(1,1), imageSize);
                 map.AddTileSheet(imagesheet);
                 Layer imageLayer = new Layer(layer.Name, map, map.Layers[0].LayerSize, FixedTileSizeMultiplied);
 
@@ -241,9 +256,20 @@ namespace TMXTile
                 imageLayer.Properties.Add("offsety", (int)Math.Floor(layer.Offsety * TileSizeMultiplier.Height));
                 imageLayer.Properties.Add("opacity", layer.Opacity);
                 imageLayer.Properties["isImageLayer"] = true;
+                imageLayer.AfterDraw += ImageLayer_AfterDraw;
 
                 map.AddLayer(imageLayer);
             }
+        }
+
+        public static Location GlobalToLocal(xTile.Dimensions.Rectangle viewport, Location globalPosition)
+        {
+            return new Location(globalPosition.X - viewport.X, globalPosition.Y - viewport.Y);
+        }
+
+        private void ImageLayer_AfterDraw(object sender, LayerEventArgs layerEventArgs)
+        {
+            DrawImageLayer?.Invoke(layerEventArgs.Layer, layerEventArgs.Viewport);
         }
 
         internal void LoadObjects(TMXMap tmxMap, ref Map map)
