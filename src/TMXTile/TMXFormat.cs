@@ -149,6 +149,9 @@ namespace TMXTile
                     else
                         map.Properties[prop.Name] = GetPropertyValue(prop);
 
+            if (tmxMap.Backgroundcolor is TMXColor bg)
+                map.Properties["@BackgroundColor"] = bg.ToString();
+
             LoadTileSets(tmxMap, ref map);
             LoadLayers(tmxMap, ref map);
             LoadImageLayers(tmxMap, ref map);
@@ -425,8 +428,7 @@ namespace TMXTile
             if (map.Description.Length > 0)
                 map.Properties["@Description"] = map.Description;
 
-            if (tiledMap1.Backgroundcolor is TMXColor bg)
-                map.Properties["@BackgroundColor"] = bg.ToString();
+            tiledMap1.Backgroundcolor = map.GetBackgroundColor();
 
             foreach (var prop in map.Properties)
                 properties.Add(new TMXProperty() { Name = prop.Key, StringValue = prop.Value.ToString(), Type = GetPropertyType(prop.Value) });
