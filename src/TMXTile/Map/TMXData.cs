@@ -16,6 +16,7 @@ namespace TMXTile
                 switch(TMXParser.CurrentEncoding){
                     case DataEncodingType.XML: return null;
                     case DataEncodingType.CSV: return "csv";
+                    case DataEncodingType.Base64: return "base64";
                     default: return "base64";
                 }
             }
@@ -23,6 +24,7 @@ namespace TMXTile
                 switch(value){
                     case null: TMXParser.CurrentEncoding = DataEncodingType.XML;break;
                     case "csv": TMXParser.CurrentEncoding = DataEncodingType.CSV; break;
+                    case "base64": TMXParser.CurrentEncoding = DataEncodingType.Base64; break;
                     default: TMXParser.CurrentEncoding = DataEncodingType.Base64; break;
                 }
             }
@@ -36,6 +38,8 @@ namespace TMXTile
                     return "gzip";
                 else if (TMXParser.CurrentEncoding == DataEncodingType.ZLib)
                     return "zlib";
+                else if (TMXParser.CurrentEncoding == DataEncodingType.ZStd)
+                    return "zstd";
 
                 return null;
             }
@@ -47,6 +51,8 @@ namespace TMXTile
                         TMXParser.CurrentEncoding = DataEncodingType.ZLib;
                     else if (value == "gzip")
                         TMXParser.CurrentEncoding = DataEncodingType.GZip;
+                    else if (value == "zstd")
+                        TMXParser.CurrentEncoding = DataEncodingType.ZStd;
                 }
             }
          }
@@ -77,6 +83,17 @@ namespace TMXTile
             set => decode(value);
         }
 
+        private void copyStream(System.IO.Stream input, System.IO.Stream output)
+        {
+            byte[] buffer = new byte[2000];
+            int len;
+            while ((len = input.Read(buffer, 0, 2000)) > 0)
+            {
+                output.Write(buffer, 0, len);
+            }
+            output.Flush();
+        }
+
         private void decode(string dataString)
         {
             if (TMXParser.CurrentEncoding == DataEncodingType.XML || dataString == null || dataString == "")
@@ -100,9 +117,24 @@ namespace TMXTile
                     gzip.CopyTo(decompressed);
                     data = decompressed.ToArray();
                 }
-
+           
             if (TMXParser.CurrentEncoding == DataEncodingType.ZLib)
-                throw (new InvalidDataException("ZLib compression is not supported."));
+            {
+                byte[] stripped = new byte[data.Length - 6];
+                for (int i = 2; i < data.Length - 4; i++)
+                    stripped[i-2] = data[i];
+
+                using (MemoryStream decompressed = new MemoryStream())
+                using (MemoryStream compressed = new MemoryStream(stripped))
+                using (DeflateStream zlib = new DeflateStream(compressed, CompressionMode.Decompress))
+                {
+                    zlib.CopyTo(decompressed);
+                    data = decompressed.ToArray();
+                }
+            }
+
+            if (TMXParser.CurrentEncoding == DataEncodingType.ZStd)
+                throw (new InvalidDataException("ZStandard compression is not supported."));
 
             for (int i = 0; i < data.Length; i += 4)
                 Tiles.Add(new TMXTile() { Gid = BitConverter.ToUInt32(data, i) });
@@ -134,6 +166,10 @@ namespace TMXTile
 
             if (TMXParser.CurrentEncoding == DataEncodingType.ZLib)
                 throw (new InvalidDataException("ZLib compression is not supported."));
+
+
+            if (TMXParser.CurrentEncoding == DataEncodingType.ZStd)
+                throw (new InvalidDataException("ZStandard compression is not supported."));
 
             return Convert.ToBase64String(data.ToArray());
         }

@@ -9,7 +9,8 @@ namespace TMXTile
         CSV,
         Base64,
         GZip,
-        ZLib
+        ZLib,
+        ZStd
         
     }
     public class TMXParser
