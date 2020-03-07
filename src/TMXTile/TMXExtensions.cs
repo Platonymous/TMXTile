@@ -153,7 +153,7 @@ namespace TMXTile
 
         public static float GetRotation(this Tile tile)
         {
-            float rotation = tile.GetRotation();
+            float rotation = tile.GetRotationValue();
 
             if (rotation != 0f)
                 rotation = (float) (Math.PI / (180d / rotation));
