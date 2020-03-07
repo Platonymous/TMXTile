@@ -13,6 +13,16 @@ namespace TMXTile
 
         [XmlAttribute(AttributeName = "height")]
         public int Height { get; set; }
+
+        [XmlIgnore()]
+        public TMXColor TransparentColor { get; set; }
+
+        [XmlAttribute(AttributeName = "trans")]
+        public string TransparentColorString
+        {
+            get => TransparentColor?.ToString().Substring(1);
+            set => TransparentColor = TMXColor.FromString("#" + value);
+        }
     }
 
 }

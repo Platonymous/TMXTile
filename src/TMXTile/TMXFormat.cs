@@ -247,6 +247,9 @@ namespace TMXTile
                 map.AddTileSheet(imagesheet);
                 Layer imageLayer = new Layer(layer.Name, map, map.Layers[0].LayerSize, FixedTileSizeMultiplied);
 
+                if (layer.Image.TransparentColor is TMXColor tcolor)
+                    imagesheet.Properties["@TColor"] = tcolor.ToString();
+
                 if (layer.Properties != null)
                     foreach (TMXProperty prop in layer.Properties)
                         if (prop.Name == "@Description")
