@@ -269,7 +269,7 @@ namespace TMXTile
             return new Location(globalPosition.X - viewport.X, globalPosition.Y - viewport.Y);
         }
 
-        private void ImageLayer_AfterDraw(object sender, LayerEventArgs layerEventArgs)
+        public void ImageLayer_AfterDraw(object sender, LayerEventArgs layerEventArgs)
         {
             DrawImageLayer?.Invoke(layerEventArgs.Layer, layerEventArgs.Viewport);
         }
@@ -357,19 +357,46 @@ namespace TMXTile
             else
                 result = new StaticTile(layer, selectedTileSheet, BlendMode.Alpha, tileIndex);
 
-            if (flipped_horizontally)
-                result.Properties["FLIPPED_HORIZONTALLY"] = flipped_horizontally;
+            if (result.GetRotation() == 0f)
+                result.SetRotation(GetRotationForFlippedTile(flipped_horizontally, flipped_vertically, flipped_diagonally));
 
-            if (flipped_vertically)
-                result.Properties["FLIPPED_VERTICALLY"] = flipped_vertically;
-
-            if (flipped_diagonally)
-                result.Properties["FLIPPED_DIAGONALLY"] = flipped_diagonally;
-
+            if (result.GetFlip() == 0)
+                result.SetFlip(GetEffectForFlippedTile(flipped_horizontally, flipped_vertically, flipped_diagonally));
 
             return result;
         }
 
+        private static int GetEffectForFlippedTile(bool horizontal, bool vertical, bool diagonal)
+        {
+            if (!horizontal && !vertical && !diagonal)
+                return 0;
+
+            int effects = 0;
+
+            if ((diagonal && vertical == horizontal) || (!diagonal && vertical && !horizontal))
+                effects = 2;
+            else if (horizontal)
+                effects = 1;
+
+            return effects;
+        }
+
+        private static float GetRotationForFlippedTile(bool horizontal, bool vertical, bool diagonal)
+        {
+            if (!horizontal && !vertical && !diagonal)
+                return 0f;
+
+            float rotation = 0f;
+
+            if (diagonal && !vertical)
+                rotation += (float)Math.PI / 2;
+            else if (diagonal)
+                rotation -= (float)Math.PI / 2;
+            else if (vertical && horizontal)
+                rotation += (float)Math.PI;
+
+            return rotation;
+        }
 
         public void Store(Map map, Stream stream)
         {

@@ -7,13 +7,6 @@ using xTile.Tiles;
 
 namespace TMXTile
 {
-    public enum TileFlip
-    {
-        FLIPPED_HORIZONTALLY,
-        FLIPPED_VERTICALLY,
-        FLIPPED_DIAGONALLY
-    }
-
     public struct DrawInstructions
     {
         public float Rotation;
@@ -52,21 +45,6 @@ namespace TMXTile
             layer.Properties["@ImageLayerTileSheet"] = tileSheet.Id;
         }
 
-        public static bool IsFlipped(this Tile tile, TileFlip direction)
-        {
-            switch (direction)
-            {
-                case (TileFlip.FLIPPED_HORIZONTALLY):
-                    return tile.Properties.ContainsKey("FLIPPED_HORIZONTALLY") && tile.Properties["FLIPPED_HORIZONTALLY"] == true;
-                case (TileFlip.FLIPPED_VERTICALLY):
-                    return tile.Properties.ContainsKey("FLIPPED_VERTICALLY") && tile.Properties["FLIPPED_VERTICALLY"] == true;
-                case (TileFlip.FLIPPED_DIAGONALLY):
-                    return tile.Properties.ContainsKey("FLIPPED_DIAGONALLY") && tile.Properties["FLIPPED_DIAGONALLY"] == true;
-                default:
-                    return false;
-            }
-        }
-
         public static Location GetOffset(this Layer layer)
         {
             return new Location(
@@ -75,10 +53,24 @@ namespace TMXTile
                 );
         }
 
+        public static Location GetOffset(this Tile tile)
+        {
+            return new Location(
+                tile.Properties.ContainsKey("@OffsetX") ? (int)tile.Properties["@OffsetX"] : 0,
+                tile.Properties.ContainsKey("@OffsetY") ? (int)tile.Properties["@OffsetY"] : 0
+                );
+        }
+
         public static void SetOffset(this Layer layer, Location offset)
         {
             layer.Properties["@OffsetX"] = offset.X;
             layer.Properties["@OffsetY"] = offset.Y;
+        }
+
+        public static void SetOffset(this Tile tile, Location offset)
+        {
+            tile.Properties["@OffsetX"] = offset.X;
+            tile.Properties["@OffsetY"] = offset.Y;
         }
 
         public static float GetOpacity(this Layer layer)
@@ -89,9 +81,22 @@ namespace TMXTile
             return 1f;
         }
 
+        public static float GetOpacity(this Tile tile)
+        {
+            if (tile.Properties.ContainsKey("@Opacity"))
+                return tile.Properties["@Opacity"];
+
+            return 1f;
+        }
+
         public static void SetOpacity(this Layer layer, float opacity)
         {
             layer.Properties["@Opacity"] = opacity;
+        }
+
+        public static void SetOpacity(this Tile tile, float opacity)
+        {
+            tile.Properties["@Opacity"] = opacity;
         }
 
         public static TMXColor GetColor(this Layer layer)
@@ -133,6 +138,33 @@ namespace TMXTile
             map.Properties["@Color"] = color.ToString();
         }
 
+        public static float GetRotation(this Tile tile)
+        {
+            if (tile.Properties.ContainsKey("@Rotation"))
+                return tile.Properties["@Rotation"];
+
+            return 0f;
+        }
+
+        public static void SetRotation(this Tile tile, float rotation)
+        {
+            tile.Properties["@Rotation"] = rotation;
+        }
+
+        public static int GetFlip(this Tile tile)
+        {
+            if (tile.Properties.ContainsKey("@Flip"))
+                return tile.Properties["@Flip"];
+
+            return 0;
+        }
+
+        public static void SetFlip(this Tile tile, int flip)
+        {
+            tile.Properties["@Flip"] = flip;
+        }
+
+
         public static TMXColor GetBackgroundColor(this Map map)
         {
             if (map.Properties.ContainsKey("@BackgroundColor"))
@@ -150,85 +182,26 @@ namespace TMXTile
 
         public static DrawInstructions GetDrawInstructions(this Tile tile)
         {
-            bool horizontal = tile.IsFlipped(TileFlip.FLIPPED_HORIZONTALLY),
-                    vertical = tile.IsFlipped(TileFlip.FLIPPED_VERTICALLY),
-                    diagonal = tile.IsFlipped(TileFlip.FLIPPED_DIAGONALLY);
-
-            TMXColor color = tile.GetColor();
-            if (color == null)
-                color = tile.Layer.GetColor();
-            if (color == null)
-                color = tile.Layer.Map.GetColor();
-
-
             return new DrawInstructions()
             {
-                Rotation = GetRotationForFlippedTile(horizontal, vertical, diagonal),
-                Effect = GetEffectForFlippedTile(horizontal, vertical, diagonal),
-                Offset = GetOffsetForFlippedTile(horizontal, vertical, diagonal, tile),
-                Color = color,
-                Opacity = tile.Layer.GetOpacity()
+                Rotation = tile.GetRotation(),
+                Effect = tile.GetFlip(),
+                Offset = tile.Layer.GetOffset() + tile.GetOffset(),
+                Color = tile.GetColor() ?? tile.Layer.GetColor() ?? tile.Layer.Map.GetColor(),
+                Opacity = tile.Layer.GetOpacity() * tile.GetOpacity()
             };
         }
 
-        private static int GetEffectForFlippedTile(bool horizontal, bool vertical, bool diagonal)
+        public static void SetupImageLayer(this Layer layer)
         {
-            if (!horizontal && !vertical && !diagonal)
-                return 0;
+            if (!layer.IsImageLayer())
+                return;
 
-            int effects = 0;
-
-            if ((diagonal && vertical == horizontal) || (!diagonal && vertical && !horizontal))
-                effects = 2;
-            else if (horizontal)
-                effects = 1;
-
-            return effects;
-        }
-        
-        private static float GetRotationForFlippedTile(bool horizontal, bool vertical, bool diagonal)
-        {
-            if (!horizontal && !vertical && !diagonal)
-                return 0f;
-
-            float rotation = 0f;
-
-            if (diagonal && !vertical)
-                rotation += (float)Math.PI / 2;
-            else if(diagonal)
-                rotation -= (float)Math.PI / 2;
-            else if (vertical && horizontal)
-                    rotation += (float)Math.PI;
-
-            return rotation;
-        }
-
-        private static Location GetOffsetForFlippedTile(bool horizontal, bool vertical, bool diagonal, Tile tile = null)
-        {
-
-            if (!horizontal && !vertical && !diagonal)
-                return Location.Origin;
-
-            Location offset = Location.Origin;
-
-            if (diagonal && !vertical)
-                offset.X = 1;
-            else if (diagonal)
-                offset.Y = 1;
-            else if (vertical && horizontal)
+            if (xTile.Format.FormatManager.Instance?.GetMapFormatByExtension("tmx") is TMXFormat tmxFormat)
             {
-                offset.X = 1;
-                offset.Y = 1;
+                layer.AfterDraw -= tmxFormat.ImageLayer_AfterDraw;
+                layer.AfterDraw += tmxFormat.ImageLayer_AfterDraw;
             }
-
-            if(tile != null)
-            {
-                xTile.Dimensions.Size tileSize = tile.Layer.TileSize;
-                offset.X *= tileSize.Width;
-                offset.Y *= tileSize.Height;
-            }
-
-            return offset;
         }
     }
 }
