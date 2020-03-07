@@ -138,17 +138,27 @@ namespace TMXTile
             map.Properties["@Color"] = color.ToString();
         }
 
-        public static float GetRotation(this Tile tile)
+        public static int GetRotationValue(this Tile tile)
         {
             if (tile.Properties.ContainsKey("@Rotation"))
                 return tile.Properties["@Rotation"];
 
-            return 0f;
+            return 0;
         }
 
-        public static void SetRotation(this Tile tile, float rotation)
+        public static void SetRotationValue(this Tile tile, int rotation)
         {
             tile.Properties["@Rotation"] = rotation;
+        }
+
+        public static float GetRotation(this Tile tile)
+        {
+            float rotation = tile.GetRotation();
+
+            if (rotation != 0f)
+                rotation = (float) (Math.PI / (180d / rotation));
+
+            return rotation;
         }
 
         public static int GetFlip(this Tile tile)

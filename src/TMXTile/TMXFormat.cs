@@ -357,8 +357,8 @@ namespace TMXTile
             else
                 result = new StaticTile(layer, selectedTileSheet, BlendMode.Alpha, tileIndex);
 
-            if (result.GetRotation() == 0f)
-                result.SetRotation(GetRotationForFlippedTile(flipped_horizontally, flipped_vertically, flipped_diagonally));
+            if (result.GetRotationValue() == 0)
+                result.SetRotationValue(GetRotationForFlippedTile(flipped_horizontally, flipped_vertically, flipped_diagonally));
 
             if (result.GetFlip() == 0)
                 result.SetFlip(GetEffectForFlippedTile(flipped_horizontally, flipped_vertically, flipped_diagonally));
@@ -381,19 +381,19 @@ namespace TMXTile
             return effects;
         }
 
-        private static float GetRotationForFlippedTile(bool horizontal, bool vertical, bool diagonal)
+        private static int GetRotationForFlippedTile(bool horizontal, bool vertical, bool diagonal)
         {
             if (!horizontal && !vertical && !diagonal)
-                return 0f;
+                return 0;
 
-            float rotation = 0f;
+            int rotation = 0;
 
             if (diagonal && !vertical)
-                rotation += (float)Math.PI / 2;
+                rotation += 90;
             else if (diagonal)
-                rotation -= (float)Math.PI / 2;
+                rotation -= 90;
             else if (vertical && horizontal)
-                rotation += (float)Math.PI;
+                rotation += 180;
 
             return rotation;
         }
