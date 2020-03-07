@@ -363,39 +363,52 @@ namespace TMXTile
             if (result.GetFlip() == 0)
                 result.SetFlip(GetEffectForFlippedTile(flipped_horizontally, flipped_vertically, flipped_diagonally));
 
-            return result;
+                return result;
         }
 
         private static int GetEffectForFlippedTile(bool horizontal, bool vertical, bool diagonal)
         {
-            if (!horizontal && !vertical && !diagonal)
+            if (diagonal)
+            {
+                if (!vertical && !horizontal)
+                    return 2;
+                else if (horizontal && vertical)
+                    return 2;
+                if (horizontal)
+                    return 0;//!
+                else if (vertical)
+                    return 0;//!
+            }
+                
+
+            if (horizontal && vertical)
                 return 0;
-
-            int effects = 0;
-
-            if ((diagonal && vertical == horizontal) || (!diagonal && vertical && !horizontal))
-                effects = 2;
             else if (horizontal)
-                effects = 1;
+                return 1;
+            else if (vertical)
+                return 2;
 
-            return effects;
+            return 0;
         }
 
         private static int GetRotationForFlippedTile(bool horizontal, bool vertical, bool diagonal)
         {
-            if (!horizontal && !vertical && !diagonal)
-                return 0;
+            if (diagonal)
+            {
+                if (!vertical && !horizontal)
+                    return 90;
+                else if (horizontal && vertical)
+                    return -90;
+                else if (horizontal)
+                    return 90;
+                else if (vertical)
+                    return -90;
+            }            
 
-            int rotation = 0;
+            if (horizontal && vertical)
+                return 180;
 
-            if (diagonal && !vertical)
-                rotation += 90;
-            else if (diagonal)
-                rotation -= 90;
-            else if (vertical && horizontal)
-                rotation += 180;
-
-            return rotation;
+            return 0;
         }
 
         public void Store(Map map, Stream stream)
