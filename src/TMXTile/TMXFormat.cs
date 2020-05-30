@@ -586,10 +586,7 @@ namespace TMXTile
                 tiledLayer1.Name = layer.Id;
                 tiledLayer1.Width = layer.LayerWidth;
                 tiledLayer1.Height = layer.LayerHeight;
-                tiledLayer1.Data = new TMXData()
-                {
-                    Tiles = new List<TMXTile>()
-                };
+                tiledLayer1.Data = new TMXData();
             var props = new List<TMXProperty>();
                 foreach (var prop in layer.Properties) {
                     if (prop.Key == "@OffsetX")
