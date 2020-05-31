@@ -61,7 +61,8 @@ namespace TMXTile
         public List<TMXChunk> Chunks { get; set; }
 
         [XmlElement(ElementName = "tile")]
-        public List<TMXTile> RawTiles
+        [Obsolete("This method only exists for (de)serialization; code should use the normalized " + nameof(Tiles) + " instead.")]
+        public List<TMXTile> XmlTiles
         {
             get
             {
@@ -70,18 +71,24 @@ namespace TMXTile
                 else
                     return null;
             }
-            set => Tiles = value;
+            set
+            {
+                // This field only applies in XML mode, but on Android it will be called for other encodings anyway with an empty list.
+                if (TMXParser.CurrentEncoding == DataEncodingType.XML)
+                    Tiles = value;
+            }
         }
 
-        [XmlIgnore]
-        public List<TMXTile> Tiles { get; set; }
-
-        [XmlText()]
+        [XmlText]
+        [Obsolete("This method only exists for (de)serialization; code should use the normalized " + nameof(Tiles) + " instead.")]
         public string Raw
         {
             get => encode();
             set => decode(value);
         }
+
+        [XmlIgnore]
+        public List<TMXTile> Tiles { get; private set; } = new List<TMXTile>();
 
         private void copyStream(System.IO.Stream input, System.IO.Stream output)
         {
