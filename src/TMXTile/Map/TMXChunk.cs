@@ -10,21 +10,6 @@ namespace TMXTile
     [XmlRoot(ElementName = "chunk")]
     public class TMXChunk
     {
-        [XmlElement(ElementName = "tile")]
-        public List<TMXTile> RawTiles {
-            get
-            {
-                if (TMXParser.CurrentEncoding == DataEncodingType.XML)
-                    return Tiles;
-                else
-                    return null;
-            }
-            set => Tiles = value;
-        }
-
-        [XmlIgnore]
-        public List<TMXTile> Tiles { get; set; }
-
         [XmlAttribute(AttributeName = "x")]
         public int X { get; set; }
 
@@ -37,11 +22,35 @@ namespace TMXTile
         [XmlAttribute(AttributeName = "height")]
         public int Height { get; set; }
 
-        [XmlText()]
-        public string Raw { 
+        [XmlElement(ElementName = "tile")]
+        [Obsolete("This method only exists for (de)serialization; code should use the normalized " + nameof(Tiles) + " instead.")]
+        public List<TMXTile> XmlTiles
+        {
+            get
+            {
+                if (TMXParser.CurrentEncoding == DataEncodingType.XML)
+                    return Tiles;
+                else
+                    return null;
+            }
+            set
+            {
+                // This field only applies in XML mode, but on Android it will be called for other encodings anyway with an empty list.
+                if (TMXParser.CurrentEncoding == DataEncodingType.XML)
+                    Tiles = value;
+            }
+        }
+
+        [XmlText]
+        [Obsolete("This method only exists for (de)serialization; code should use the normalized " + nameof(Tiles) + " instead.")]
+        public string Raw
+        {
             get => encode();
             set => decode(value);
         }
+
+        [XmlIgnore]
+        public List<TMXTile> Tiles { get; private set; } = new List<TMXTile>();
 
         private void decode(string dataString)
         {

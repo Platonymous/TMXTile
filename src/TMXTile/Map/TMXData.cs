@@ -90,17 +90,6 @@ namespace TMXTile
         [XmlIgnore]
         public List<TMXTile> Tiles { get; private set; } = new List<TMXTile>();
 
-        private void copyStream(System.IO.Stream input, System.IO.Stream output)
-        {
-            byte[] buffer = new byte[2000];
-            int len;
-            while ((len = input.Read(buffer, 0, 2000)) > 0)
-            {
-                output.Write(buffer, 0, len);
-            }
-            output.Flush();
-        }
-
         private void decode(string dataString)
         {
             if (TMXParser.CurrentEncoding == DataEncodingType.XML || dataString == null || dataString == "")
