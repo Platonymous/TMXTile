@@ -60,8 +60,8 @@ namespace TMXTile
         [XmlElement(ElementName = "chunk")]
         public List<TMXChunk> Chunks { get; set; }
 
+        /// <summary>This property is for (de)serialization; code should use the normalized <see cref="Tiles"/> instead.</summary>
         [XmlElement(ElementName = "tile")]
-        [Obsolete("This method only exists for (de)serialization; code should use the normalized " + nameof(Tiles) + " instead.")]
         public List<TMXTile> XmlTiles
         {
             get
@@ -79,9 +79,9 @@ namespace TMXTile
             }
         }
 
+        /// <summary>This property is for (de)serialization; code should use the normalized <see cref="Tiles"/> instead.</summary>
         [XmlText]
-        [Obsolete("This method only exists for (de)serialization; code should use the normalized " + nameof(Tiles) + " instead.")]
-        public string Raw
+        public string BodyTiles
         {
             get => encode();
             set => decode(value);
