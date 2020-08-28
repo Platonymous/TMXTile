@@ -179,6 +179,10 @@ namespace TMXTile
                         foreach (var prop in tile.Properties)
                             tileSheet.Properties[string.Format("@TileIndex@{0}@{1}", tile.Id, prop.Name)] = GetPropertyValue(prop);
 
+                if (tileSet.Properties != null)
+                    foreach (TMXProperty prop in tileSet.Properties)
+                        tileSheet.Properties[prop.Name] = GetPropertyValue(prop);
+
                 map.AddTileSheet(tileSheet);
             }
         }

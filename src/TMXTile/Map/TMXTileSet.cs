@@ -28,6 +28,10 @@ namespace TMXTile
         public TMXGrid Grid { get; set; }
         [XmlElement(ElementName = "tile")]
         public List<TMXTileSetTile> Tiles { get; set; }
+        [XmlArrayItem("property", typeof(TMXProperty))]
+        [XmlArray("properties")]
+        public TMXProperty[] Properties { get; set; }
+
         [XmlAttribute(AttributeName = "source")]
         public string Source
         {
@@ -48,6 +52,7 @@ namespace TMXTile
                         Columns = ts.Columns;
                         Grid = ts.Grid;
                         Tiles = ts.Tiles;
+                        Properties = ts.Properties;
                     }
 
             }
