@@ -18,28 +18,32 @@ namespace TMXTile
         private XmlSerializer Serializer { get; } = new XmlSerializer(typeof(TMXMap));
         internal static DataEncodingType CurrentEncoding {get;set;} = DataEncodingType.XML;
         internal static string CurrentDirectory { get; set; } = "";
+
+        public static ICompressionHelper CompressionHelper { get; set; } = new CompressionHelper();
         public TMXMap Parse(Stream stream, string path = "")
         {
+            TMXMap parsedMap = null;
             CurrentEncoding = DataEncodingType.XML;
-
             if (path == "" && stream is FileStream fs)
                 path = fs.Name;
 
             CurrentDirectory = Path.GetDirectoryName(path);
 
             if (Serializer.Deserialize(stream) is TMXMap map)
-                return map;
+                parsedMap = map;
 
-            return null;
+            return parsedMap;
         }
 
         public TMXMap Parse(XmlReader reader)
         {
+            TMXMap parsedMap = null;
+
             CurrentEncoding = DataEncodingType.XML;
             if (Serializer.Deserialize(reader) is TMXMap map)
-                return map;
+                parsedMap = map;
 
-            return null;
+            return parsedMap;
         }
 
         public TMXMap Parse(string path)
@@ -51,6 +55,9 @@ namespace TMXTile
 
         public void Export(TMXMap map, Stream stream, DataEncodingType dataEncodingType = DataEncodingType.XML)
         {
+            if (dataEncodingType == DataEncodingType.CSV)
+                PrepareCSVFormatting(map);
+
             CurrentEncoding = dataEncodingType;
             Serializer.Serialize(stream, map);
         }
@@ -63,8 +70,17 @@ namespace TMXTile
 
         public void Export(TMXMap map, XmlWriter writer, DataEncodingType dataEncodingType = DataEncodingType.XML)
         {
+            if (dataEncodingType == DataEncodingType.CSV)
+                PrepareCSVFormatting(map);
+
             CurrentEncoding = dataEncodingType;
             Serializer.Serialize(writer, map);
+        }
+
+        internal void PrepareCSVFormatting(TMXMap map)
+        {
+            foreach(TMXLayer layer in map.Layers)
+                layer.Data.LayerWidth = (int) layer.Width;
         }
 
     }

@@ -68,16 +68,13 @@ namespace TMXTile
             byte[] data = Convert.FromBase64String(dataString);
 
             if (TMXParser.CurrentEncoding == DataEncodingType.GZip)
-                using (MemoryStream decompressed = new MemoryStream())
-                using (MemoryStream compressed = new MemoryStream(data))
-                using (GZipStream gzip = new GZipStream(compressed, CompressionMode.Decompress))
-                {
-                    gzip.CopyTo(decompressed);
-                    data = decompressed.ToArray();
-                }
+                data = TMXParser.CompressionHelper.Decompress(DataEncodingType.ZStd, data);
 
             if (TMXParser.CurrentEncoding == DataEncodingType.ZLib)
-                    throw (new InvalidDataException("ZLib compression is not supported."));
+                data = TMXParser.CompressionHelper.Decompress(DataEncodingType.ZLib, data);
+
+            if (TMXParser.CurrentEncoding == DataEncodingType.ZStd)
+                data = TMXParser.CompressionHelper.Decompress(DataEncodingType.ZStd, data);
 
             for (int i = 0; i < data.Length; i += 4)
                 Tiles.Add(new TMXTile() { Gid = BitConverter.ToUInt32(data, i) });
@@ -98,17 +95,13 @@ namespace TMXTile
             byte[] data = byteList.ToArray();
 
             if (TMXParser.CurrentEncoding == DataEncodingType.GZip)
-                using (MemoryStream decompressed = new MemoryStream(data))
-                using (MemoryStream compressed = new MemoryStream())
-                using (GZipStream gzip = new GZipStream(compressed, CompressionMode.Compress))
-                {
-                    decompressed.CopyTo(gzip);
-                    gzip.Close();
-                    data = compressed.ToArray();
-                }
+                data = TMXParser.CompressionHelper.Compress(DataEncodingType.GZip, data);
 
             if (TMXParser.CurrentEncoding == DataEncodingType.ZLib)
-                throw (new InvalidDataException("ZLib compression is not supported."));
+                data = TMXParser.CompressionHelper.Compress(DataEncodingType.ZLib, data);
+
+            if (TMXParser.CurrentEncoding == DataEncodingType.ZStd)
+                data = TMXParser.CompressionHelper.Compress(DataEncodingType.ZStd, data);
 
             return Convert.ToBase64String(data.ToArray());
         }
