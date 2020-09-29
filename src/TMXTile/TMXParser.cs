@@ -57,9 +57,12 @@ namespace TMXTile
         {
             if (dataEncodingType == DataEncodingType.CSV)
                 PrepareCSVFormatting(map);
+            
+            var ns = new XmlSerializerNamespaces();
+            ns.Add("", "");
 
             CurrentEncoding = dataEncodingType;
-            Serializer.Serialize(stream, map);
+            Serializer.Serialize(stream, map, ns);
         }
 
         public void Export(TMXMap map, string path, DataEncodingType dataEncodingType = DataEncodingType.XML)
@@ -72,9 +75,11 @@ namespace TMXTile
         {
             if (dataEncodingType == DataEncodingType.CSV)
                 PrepareCSVFormatting(map);
+            var ns = new XmlSerializerNamespaces();
+            ns.Add("", "");
 
             CurrentEncoding = dataEncodingType;
-            Serializer.Serialize(writer, map);
+            Serializer.Serialize(writer, map, ns);
         }
 
         internal void PrepareCSVFormatting(TMXMap map)

@@ -141,7 +141,7 @@ namespace TMXTile
             Map map = new Map();
             if (tmxMap.Orientation != "orthogonal")
                 throw new Exception("Only orthogonal Tiled maps are supported.");
-            TMXProperty[] properties = tmxMap.Properties;
+            TMXProperty[] properties = tmxMap.Properties?.OrderBy(p => p?.Name).ToArray();
             if (properties != null)
                 foreach (var prop in properties)
                     if (prop.Name == "@Description")
@@ -429,15 +429,37 @@ namespace TMXTile
         {
             var parser = new TMXParser();
             var tmxMap = Store(map);
+           
             string result = "";
             using (StringWriter stringWriter = new StringWriter())
-            using (XmlWriter writer = XmlWriter.Create(stringWriter))
+            using (XmlWriter writer = XmlWriter.Create(stringWriter, new XmlWriterSettings
+            {
+                Encoding = System.Text.Encoding.GetEncoding("UTF-8"),
+                Indent = true
+            }))
             {
                 parser.Export(tmxMap, writer, encoding);
                 writer.Close();
                 result = stringWriter.ToString();
             }
-            return result;
+            return AdjustToTiledFormat(result);
+        }
+
+        private string AdjustToTiledFormat(string data)
+        {
+            data = data
+                .Replace("utf-16", "UTF-8")
+                .Replace("\" />", "\"/>")
+                .Replace("type=\"string\" value", "value")
+                .Replace(" visible=\"false\" locked=\"false\"", "")
+                .Replace(" opacity=\"1\"", "")
+                .Replace(" offsetx=\"0\"", "")
+                .Replace(" offsety=\"0\"", "")
+                .Replace(" rotation=\"0\"", "")
+                .Replace("<properties />", "")
+                .Replace("  ", " ");
+
+            return data;
         }
 
         public void Store(Map map, string path, DataEncodingType encoding = DataEncodingType.XML)
@@ -464,8 +486,11 @@ namespace TMXTile
         public TMXMap Store(Map map)
         {
             TMXMap tiledMap1 = new TMXMap();
-            tiledMap1.Version = "1.0";
+            tiledMap1.Version = "1.4";
+            tiledMap1.Tiledversion = "1.4.2";
             tiledMap1.Orientation = "orthogonal";
+            tiledMap1.Renderorder = "right-down";
+
             tiledMap1.Width = map.DisplayWidth / FixedTileSizeMultiplied.Width;
             tiledMap1.Height = map.DisplayHeight / FixedTileSizeMultiplied.Height;
             tiledMap1.Tilewidth = FixedTileSize.Width;
@@ -480,7 +505,7 @@ namespace TMXTile
             foreach (var prop in map.Properties)
                 properties.Add(new TMXProperty() { Name = prop.Key, StringValue = prop.Value.ToString(), Type = GetPropertyType(prop.Value) });
 
-            tiledMap1.Properties = properties.ToArray();
+            tiledMap1.Properties = properties?.OrderBy(p => p?.Name).ToArray();
 
             tiledMap1.Tilesets = new List<TMXTileset>();
 
@@ -493,6 +518,7 @@ namespace TMXTile
             StoreTileSets(map, ref tiledMap1);
             StoreLayers(map, ref tiledMap1);
             StoreObjects(map, ref tiledMap1);
+
 
             return tiledMap1;
         }
@@ -540,7 +566,7 @@ namespace TMXTile
                                 var propList = new List<TMXProperty>();
                                 propList.AddRange(tile.Properties);
                                 propList.Add(tmxProp);
-                                tile.Properties = propList.ToArray();
+                                tile.Properties = propList?.OrderBy(p => p?.Name).ToArray();
                             }
                         }
                     }
@@ -553,12 +579,16 @@ namespace TMXTile
 
         public void StoreLayers(Map map, ref TMXMap tiledMap)
         {
+            int l = 0;
             foreach (Layer layer in map.Layers)
             {
+                l++;
+
                 if (layer.IsImageLayer())
                 {
                     TMXImageLayer imageLayer = new TMXImageLayer();
                     imageLayer.Name = layer.Id;
+                    imageLayer.Id = l;
                     var imageProps = new List<TMXProperty>();
                     foreach (var prop in layer.Properties)
                     {
@@ -580,7 +610,7 @@ namespace TMXTile
                     imageLayer.Image.Width = imageTs.TileWidth * FixedTileSize.Width;
                     imageLayer.Image.Source = imageTs.ImageSource;
 
-                    imageLayer.Properties = imageProps.ToArray();
+                    imageLayer.Properties = imageProps?.OrderBy(p => p?.Name).ToArray();
 
                     tiledMap.ImageLayers.Add(imageLayer);
                     continue;
@@ -588,6 +618,7 @@ namespace TMXTile
 
                 TMXLayer tiledLayer1 = new TMXLayer();
                 tiledLayer1.Name = layer.Id;
+                tiledLayer1.Id = l;
                 tiledLayer1.Width = layer.LayerWidth;
                 tiledLayer1.Height = layer.LayerHeight;
                 tiledLayer1.Data = new TMXData();
@@ -645,7 +676,7 @@ namespace TMXTile
                 foreach (int gid in intList)
                     tiledLayer1.Data.Tiles.Add(new TMXTile() { Gid = (uint)gid });
 
-                tiledLayer1.Properties = props.ToArray();
+                tiledLayer1.Properties = props?.OrderBy(p => p?.Name).ToArray();
    
                 tiledMap.Layers.Add(tiledLayer1);
             }
@@ -653,11 +684,15 @@ namespace TMXTile
 
         internal void StoreObjects(Map map, ref TMXMap tiledMap)
         {
+            int l = map.Layers.Count();
+            ++tiledMap.Nextobjectid;
             foreach (Layer layer in map.Layers)
             {
+                l++;
                 TMXObjectgroup tiledObjectGroup = new TMXObjectgroup()
                 {
                     Name = layer.Id,
+                    Id = l,
                     Objects = new List<TMXObject>()
                 };
                 for (int index1 = 0; index1 < layer.LayerHeight; ++index1)
@@ -685,6 +720,7 @@ namespace TMXTile
                     }
                 tiledMap.Objectgroups.Add(tiledObjectGroup);
             }
+            tiledMap.Nextlayerid = (map.Layers.Count() * 2) + 1;
         }
 
         internal PropertyValue GetPropertyValue(TMXProperty prop)
