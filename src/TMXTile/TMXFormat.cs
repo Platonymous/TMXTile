@@ -135,13 +135,13 @@ namespace TMXTile
             TMXMap tmxMap = parser.Parse(reader);
             return Load(tmxMap);
         }
-
+        
         public Map Load(TMXMap tmxMap)
         {
             Map map = new Map();
             if (tmxMap.Orientation != "orthogonal")
                 throw new Exception("Only orthogonal Tiled maps are supported.");
-            TMXProperty[] properties = tmxMap.Properties?.OrderBy(p => p?.Name).ToArray();
+            TMXProperty[] properties = GetOrdered(tmxMap.Properties);
             if (properties != null)
                 foreach (var prop in properties)
                     if (prop.Name == "@Description")
@@ -158,6 +158,11 @@ namespace TMXTile
             LoadObjects(tmxMap, ref map);
 
             return map;
+        }
+
+        private TMXProperty[] GetOrdered(IEnumerable<TMXProperty> props)
+        {
+            return props?.OrderBy(p => p?.Name[0] is char f && f.ToString().Equals(f.ToString().ToLower()) ? "B_" + p?.Name : "A_" + p?.Name).ToArray();
         }
 
         public void LoadTileSets(TMXMap tmxMap, ref Map map)
@@ -510,8 +515,7 @@ namespace TMXTile
             foreach (var prop in map.Properties)
                 properties.Add(new TMXProperty() { Name = prop.Key, StringValue = prop.Value.ToString(), Type = GetPropertyType(prop.Value) });
 
-            tiledMap1.Properties = properties?.OrderBy(p => p?.Name).ToArray();
-
+            tiledMap1.Properties = GetOrdered(properties);
             tiledMap1.Tilesets = new List<TMXTileset>();
 
 
@@ -572,7 +576,7 @@ namespace TMXTile
                                 var propList = new List<TMXProperty>();
                                 propList.AddRange(tile.Properties);
                                 propList.Add(tmxProp);
-                                tile.Properties = propList?.OrderBy(p => p?.Name).ToArray();
+                                tile.Properties = GetOrdered(propList);
                             }
                         }
                     }
@@ -615,8 +619,7 @@ namespace TMXTile
                     imageLayer.Image.Width = imageTs.TileWidth * FixedTileSize.Width;
                     imageLayer.Image.Source = imageTs.ImageSource;
 
-                    imageLayer.Properties = imageProps?.OrderBy(p => p?.Name).ToArray();
-
+                    imageLayer.Properties = GetOrdered(imageProps);
                     tiledMap.ImageLayers.Add(imageLayer);
                     continue;
                 }
@@ -681,8 +684,7 @@ namespace TMXTile
                 foreach (int gid in intList)
                     tiledLayer1.Data.Tiles.Add(new TMXTile() { Gid = (uint)gid });
 
-                tiledLayer1.Properties = props?.OrderBy(p => p?.Name).ToArray();
-   
+                tiledLayer1.Properties = GetOrdered(props);
                 tiledMap.Layers.Add(tiledLayer1);
             }
         }
