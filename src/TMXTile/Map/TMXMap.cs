@@ -35,6 +35,9 @@ namespace TMXTile
         [XmlAttribute(AttributeName = "renderorder")]
         public string Renderorder { get; set; }
 
+        [XmlAttribute(AttributeName = "compressionlevel")]
+        public int Compressionlevel { get; set; }
+
         [XmlAttribute(AttributeName = "width")]
         public int Width { get; set; }
 

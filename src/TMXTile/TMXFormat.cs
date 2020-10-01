@@ -457,7 +457,11 @@ namespace TMXTile
                 .Replace(" offsety=\"0\"", "")
                 .Replace(" rotation=\"0\"", "")
                 .Replace("<properties />", "")
-                .Replace("  ", " ");
+                .Replace("  ", " ")
+                .Replace(@">
+  
+  <data ", @">
+  <data ");
 
             return data;
         }
@@ -488,6 +492,7 @@ namespace TMXTile
             TMXMap tiledMap1 = new TMXMap();
             tiledMap1.Version = "1.4";
             tiledMap1.Tiledversion = "1.4.2";
+            tiledMap1.Compressionlevel = 0;
             tiledMap1.Orientation = "orthogonal";
             tiledMap1.Renderorder = "right-down";
 
@@ -519,6 +524,7 @@ namespace TMXTile
             StoreLayers(map, ref tiledMap1);
             StoreObjects(map, ref tiledMap1);
 
+            tiledMap1.Tilesets.ForEach(ts => ts.Tiles = ts.Tiles.OrderBy(t => t.Id).ToList());
 
             return tiledMap1;
         }
@@ -571,7 +577,6 @@ namespace TMXTile
                         }
                     }
                 }
-
                 tilemap.Tilesets.Add(tiledTileSet1);
                 num += tileSheet.TileCount;
             }
