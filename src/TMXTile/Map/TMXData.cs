@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
-using System.IO.Compression;
 using System.Linq;
+using System.Text;
 using System.Xml.Serialization;
 
 namespace TMXTile
@@ -14,18 +13,23 @@ namespace TMXTile
         public int LayerWidth { get; set; } = -1;
 
         [XmlAttribute(AttributeName = "encoding")]
-        public string Encoding { 
-            get{
-                switch(TMXParser.CurrentEncoding){
+        public string Encoding
+        {
+            get
+            {
+                switch (TMXParser.CurrentEncoding)
+                {
                     case DataEncodingType.XML: return null;
                     case DataEncodingType.CSV: return "csv";
                     case DataEncodingType.Base64: return "base64";
                     default: return "base64";
                 }
             }
-            set{
-                switch(value){
-                    case null: TMXParser.CurrentEncoding = DataEncodingType.XML;break;
+            set
+            {
+                switch (value)
+                {
+                    case null: TMXParser.CurrentEncoding = DataEncodingType.XML; break;
                     case "csv": TMXParser.CurrentEncoding = DataEncodingType.CSV; break;
                     case "base64": TMXParser.CurrentEncoding = DataEncodingType.Base64; break;
                     default: TMXParser.CurrentEncoding = DataEncodingType.Base64; break;
@@ -34,7 +38,8 @@ namespace TMXTile
         }
 
         [XmlAttribute(AttributeName = "compression")]
-        public string Compression {
+        public string Compression
+        {
             get
             {
                 if (TMXParser.CurrentEncoding == DataEncodingType.GZip)
@@ -58,7 +63,7 @@ namespace TMXTile
                         TMXParser.CurrentEncoding = DataEncodingType.ZStd;
                 }
             }
-         }
+        }
 
         [XmlElement(ElementName = "chunk")]
         public List<TMXChunk> Chunks { get; set; }
@@ -129,19 +134,17 @@ namespace TMXTile
 
             if (TMXParser.CurrentEncoding == DataEncodingType.CSV)
             {
-                string csv = Environment.NewLine;
+                StringBuilder csv = new StringBuilder(Environment.NewLine);
                 for (int i = 0, c = Tiles.Count; i < c; i++)
                 {
-                    csv += Tiles[i].Gid.ToString();
+                    csv.Append(Tiles[i].Gid);
                     if (i != c - 1)
-                        csv += ",";
+                        csv.Append(",");
                     if ((i + 1) % LayerWidth == 0)
-                        csv += Environment.NewLine;
+                        csv.Append(Environment.NewLine);
                 }
 
-                return csv;
-
-                return string.Join(",", Tiles.Select<TMXTile, string>(t => t.Gid.ToString()));
+                return csv.ToString();
             }
             List<byte> byteList = new List<byte>();
 
