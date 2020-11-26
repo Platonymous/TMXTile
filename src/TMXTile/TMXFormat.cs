@@ -555,29 +555,26 @@ namespace TMXTile
                     Height = tileSheet.SheetHeight * FixedTileSize.Height,
                 };
                 tiledTileSet1.Tiles = new List<TMXTileSetTile>();
-                foreach (KeyValuePair<string, PropertyValue> property in tileSheet.Properties)
+
+                for(int i = 0; i < tileSheet.TileCount; i++)
                 {
-                    if (property.Key.StartsWith("@Tile@") || property.Key.StartsWith("@TileIndex@"))
+                    foreach (KeyValuePair<string, PropertyValue> property in tileSheet.TileIndexProperties[i])
                     {
-                        string[] strArray = property.Key.Split(new char[1]
+                        var tmxProp = new TMXProperty() { Name = property.Key, StringValue = property.Value.ToString(), Type = GetPropertyType(property.Value) };
+                        var tile = tiledTileSet1.Tiles.FirstOrDefault(tiledTile => tiledTile.Id == i);
+                        if (tile == null)
                         {
-              '@'
-                        }, StringSplitOptions.RemoveEmptyEntries);
-                        int tileIndex = int.Parse(strArray[1]);
-                        string name = strArray[2];
-                        List<TMXProperty> properties = new List<TMXProperty>();
-                        if (tiledTileSet1.Tiles.FirstOrDefault(tiledTile => tiledTile.Id == tileIndex) is TMXTileSetTile tile)
+                            tile = new TMXTileSetTile() { Id = i, Properties = new TMXProperty[0] };
+                            tiledTileSet1.Tiles.Add(tile);
+                        }
+                        if (tile.Properties == null)
+                            tile.Properties = new TMXProperty[] { tmxProp };
+                        else
                         {
-                            var tmxProp = new TMXProperty() { Name = name, StringValue = tileSheet.Properties[property.Key].ToString(), Type = GetPropertyType(tileSheet.Properties[property.Key]) };
-                            if (tile.Properties == null)
-                                tile.Properties = new TMXProperty[] { tmxProp };
-                            else
-                            {
-                                var propList = new List<TMXProperty>();
-                                propList.AddRange(tile.Properties);
-                                propList.Add(tmxProp);
-                                tile.Properties = GetOrdered(propList);
-                            }
+                            var propList = new List<TMXProperty>();
+                            propList.AddRange(tile.Properties);
+                            propList.Add(tmxProp);
+                            tile.Properties = GetOrdered(propList);
                         }
                     }
                 }
